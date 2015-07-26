@@ -1,0 +1,89 @@
+0 info it worked if it ends with ok
+1 verbose cli [ '/usr/bin/node',
+1 verbose cli   '/usr/bin/npm',
+1 verbose cli   'install',
+1 verbose cli   '--save',
+1 verbose cli   'bodyParser' ]
+2 info using npm@1.4.28
+3 info using node@v0.10.39
+4 verbose node symlink /usr/bin/node
+5 warn package.json wdonahoeart-server@0.1.0 No repository field.
+6 warn package.json wdonahoeart-server@0.1.0 No README data
+7 verbose readDependencies using package.json deps
+8 verbose cache add [ 'bodyParser', null ]
+9 verbose cache add name=undefined spec="bodyParser" args=["bodyParser",null]
+10 verbose parsed url { protocol: null,
+10 verbose parsed url   slashes: null,
+10 verbose parsed url   auth: null,
+10 verbose parsed url   host: null,
+10 verbose parsed url   port: null,
+10 verbose parsed url   hostname: null,
+10 verbose parsed url   hash: null,
+10 verbose parsed url   search: null,
+10 verbose parsed url   query: null,
+10 verbose parsed url   pathname: 'bodyParser',
+10 verbose parsed url   path: 'bodyParser',
+10 verbose parsed url   href: 'bodyParser' }
+11 silly lockFile caa4c3c7-bodyParser bodyParser
+12 verbose lock bodyParser /home/wdonahoe/.npm/caa4c3c7-bodyParser.lock
+13 silly lockFile caa4c3c7-bodyParser bodyParser
+14 silly lockFile caa4c3c7-bodyParser bodyParser
+15 verbose addNamed [ 'bodyParser', '' ]
+16 verbose addNamed [ null, '*' ]
+17 silly lockFile e0b6bd45-bodyParser bodyParser@
+18 verbose lock bodyParser@ /home/wdonahoe/.npm/e0b6bd45-bodyParser.lock
+19 silly addNameRange { name: 'bodyParser', range: '*', hasData: false }
+20 verbose request where is /bodyParser
+21 verbose request registry https://registry.npmjs.org/
+22 verbose request id 644f81481f9af8fa
+23 verbose url raw /bodyParser
+24 verbose url resolving [ 'https://registry.npmjs.org/', './bodyParser' ]
+25 verbose url resolved https://registry.npmjs.org/bodyParser
+26 verbose request where is https://registry.npmjs.org/bodyParser
+27 info trying registry request attempt 1 at 12:10:20
+28 http GET https://registry.npmjs.org/bodyParser
+29 http 404 https://registry.npmjs.org/bodyParser
+30 verbose headers { server: 'CouchDB/1.5.0 (Erlang OTP/R16B03)',
+30 verbose headers   'content-type': 'application/json',
+30 verbose headers   'cache-control': 'max-age=0',
+30 verbose headers   'content-length': '51',
+30 verbose headers   'accept-ranges': 'bytes',
+30 verbose headers   date: 'Sat, 25 Jul 2015 16:10:21 GMT',
+30 verbose headers   via: '1.1 varnish',
+30 verbose headers   age: '0',
+30 verbose headers   connection: 'keep-alive',
+30 verbose headers   'x-served-by': 'cache-jfk1031-JFK',
+30 verbose headers   'x-cache': 'MISS',
+30 verbose headers   'x-cache-hits': '0',
+30 verbose headers   'x-timer': 'S1437840621.080221,VS0,VE95' }
+31 silly registry.get cb [ 404,
+31 silly registry.get   { server: 'CouchDB/1.5.0 (Erlang OTP/R16B03)',
+31 silly registry.get     'content-type': 'application/json',
+31 silly registry.get     'cache-control': 'max-age=0',
+31 silly registry.get     'content-length': '51',
+31 silly registry.get     'accept-ranges': 'bytes',
+31 silly registry.get     date: 'Sat, 25 Jul 2015 16:10:21 GMT',
+31 silly registry.get     via: '1.1 varnish',
+31 silly registry.get     age: '0',
+31 silly registry.get     connection: 'keep-alive',
+31 silly registry.get     'x-served-by': 'cache-jfk1031-JFK',
+31 silly registry.get     'x-cache': 'MISS',
+31 silly registry.get     'x-cache-hits': '0',
+31 silly registry.get     'x-timer': 'S1437840621.080221,VS0,VE95' } ]
+32 silly lockFile e0b6bd45-bodyParser bodyParser@
+33 silly lockFile e0b6bd45-bodyParser bodyParser@
+34 error 404 404 Not Found: bodyParser
+34 error 404
+34 error 404 'bodyParser' is not in the npm registry.
+34 error 404 You should bug the author to publish it
+34 error 404 It was specified as a dependency of 'wdonahoeart-server'
+34 error 404
+34 error 404 Note that you can also install from a
+34 error 404 tarball, folder, or http url, or git url.
+35 error System Linux 3.13.0-55-generic
+36 error command "/usr/bin/node" "/usr/bin/npm" "install" "--save" "bodyParser"
+37 error cwd /home/wdonahoe/Documents/projects/wdonahoeart3
+38 error node -v v0.10.39
+39 error npm -v 1.4.28
+40 error code E404
+41 verbose exit [ 1, true ]
