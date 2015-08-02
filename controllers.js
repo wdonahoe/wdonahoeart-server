@@ -4,6 +4,7 @@ var httpStatus 	= require('http-status-codes');
 var mongoose 	= require('mongoose');
 var aws 		= require('aws-sdk');
 var bcrypt 		= require('bcrypt-nodejs');
+var jwt 		= require('jsonwebtoken');
 var _ 			= require('lodash');
 
 var AWS_ACCESS_KEY 	= config.aws.aws_access;
@@ -121,16 +122,15 @@ module.exports = {
 		var email 		= req.body.email;
 		var password 	= req.body.password;
 
+		if (!email || !password)
+			res.sendStatus(httpStatus.BAD_REQUEST);
+
 		if (_.includes(admin_emails, email)){
-			if (bcrypt.compareSync(password, admin_pass)){
-				if (req.session){
-					res.sendStatus(httpStatus.NOT_MODIFIED).end();
-				}
-				req.session.user = true;
-				res.sendStatus(httpStatus.CREATED).end();
-			}
+			if (bcrypt.compareSync(password, admin_pass))
+				res.status(httpStatus.CREATED).json({ id_token: createToken(email), user: email.split("@")[0] });
+		} else {
+			res.sendStatus(httpStatus.UNAUTHORIZED).end();
 		}
-		res.sendStatus(httpStatus.UNAUTHORIZED).end();
 	},
 
 	logout: function(req, res){
@@ -141,22 +141,13 @@ module.exports = {
 		* @param {function} next
 		*/
 		delete req.session;
-		res.sendStatus(httpStatus.NO_CONTENT).end();
-	},
-
-	isValidAdmin: function(req, res, next){
-		/**
-		* Admin authentication middleware.
-		* @param {Object} req
-		* @param {Object} res
-		* @param {function} next
-		*/
-		if (req.session.user)
-			return next();
-		else
-			res.sendStatus(httpStatus.UNAUTHORIZED).end();
+		res.sendStatus(httpStatus.NO_CONTENT).json({ user: undefined });
 	}
 
+}
+
+function createToken(email){
+	return jwt.sign(email, config.jwt.secret, { expiresInMinutes: 60 * 5 });
 }
 
 function getSignedUrl(fn, ft, next){
