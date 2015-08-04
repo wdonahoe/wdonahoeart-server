@@ -1,14 +1,22 @@
 var express 	= require('express');
-var httpStatus 	= require('http-status-codes');
+var httpStatus 	= require('http-status');
 var logger 		= require('./config/logger');
 var config 		= require('./config/config');
 var controllers = require('./controllers');
 var jwt 		= require('express-jwt');
 var router  	= express.Router();
 
+var jwt_secret 		= config.jwt.secret;
+
 var jwtCheck = jwt({
-	secret: config.jwt.secret
+	secret: jwt_secret
 });
+
+router.route('/test/protect')
+	.get(jwtCheck,controllers.dummyProtected);
+
+router.route('/test')
+	.get(controllers.dummyUnprotected);
 
 router.route('/drawings')
 	.get(controllers.getDrawings)

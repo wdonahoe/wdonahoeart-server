@@ -1,6 +1,6 @@
 var Drawing 	= require('./models/drawing');
 var config 		= require('./config/config');
-var httpStatus 	= require('http-status-codes');
+var httpStatus 	= require('http-status');
 var mongoose 	= require('mongoose');
 var aws 		= require('aws-sdk');
 var bcrypt 		= require('bcrypt-nodejs');
@@ -14,7 +14,17 @@ var S3_BUCKET 		= config.aws.aws_bucket;
 var admin_emails 	= config.admin.emails;
 var admin_pass		= config.admin.pass_hash;
 
+var jwt_secret 		= config.jwt.secret;
+
 module.exports = {
+
+	dummyUnprotected: function(req, res, next){
+		res.json({message: "You've accessed an unprotected resource!"});
+	},
+
+	dummyProtected: function(req, res, next){
+		res.json({message: "You've accessed a protected resource!"});
+	},
 
 	getDrawings: function(req, res, next) {
 		/**
@@ -26,7 +36,7 @@ module.exports = {
 		Drawing.find().exec(function(err, drawings){
 			if (err)
 				return next(err);
-			res.status(httpStatus.OK).json(drawings);
+			res.status(httpStatus[200]).json(drawings);
 		});
 	},
 
@@ -59,7 +69,7 @@ module.exports = {
 		Drawing.find({ is_bw: true }).exec(function(err, drawings){
 			if (err)
 				return next(err);
-			res.status(httpStatus.OK).json(drawings);
+			res.status(httpStatus[200]).json(drawings);
 		});
 	},
 
@@ -73,7 +83,7 @@ module.exports = {
 		Drawing.find({ is_bw: false }).exec(function(err, drawings){
 			if (err)
 				return next(err);
-			res.status(httpStatus.OK).json(drawings);
+			res.status(httpStatus[200]).json(drawings);
 		});
 	},
 
@@ -88,7 +98,7 @@ module.exports = {
 		Drawing.findOne({ title: fullTitle }).exec(function(err, drawing){
 			if (err)
 				return next(err);
-			res.status(httpStatus.OK).json(drawing);
+			res.status(httpStatus[200]).json(drawing);
 		});
 	},
 
@@ -99,7 +109,7 @@ module.exports = {
 		* @param {Object} res
 		* @param {function} next
 		*/
-		res.status(httpStatus.OK).json({});
+		res.status(httpStatus[200]).json({});
 	},
 
 	deleteDrawing: function(req, res, next){
@@ -109,7 +119,7 @@ module.exports = {
 		* @param {Object} res
 		* @param {function} next
 		*/
-		res.status(httpStatus.OK).json({});
+		res.status(httpStatus[200]).json({});
 	},
 
 	login: function(req, res){
@@ -123,13 +133,13 @@ module.exports = {
 		var password 	= req.body.password;
 
 		if (!email || !password)
-			res.sendStatus(httpStatus.BAD_REQUEST);
+			res.sendStatus(httpStatus[400]);
 
 		if (_.includes(admin_emails, email)){
 			if (bcrypt.compareSync(password, admin_pass))
-				res.status(httpStatus.CREATED).json({ id_token: createToken(email), user: email.split("@")[0] });
+				res.status(httpStatus[201]).json({ id_token: createToken(email), user: email.split("@")[0] });
 		} else {
-			res.sendStatus(httpStatus.UNAUTHORIZED).end();
+			res.sendStatus(httpStatus[401]).end();
 		}
 	},
 
@@ -141,13 +151,13 @@ module.exports = {
 		* @param {function} next
 		*/
 		delete req.session;
-		res.sendStatus(httpStatus.NO_CONTENT).json({ user: undefined });
+		res.sendStatus(httpStatus[204]).json({ user: undefined }); // respond no content
 	}
 
 }
 
 function createToken(email){
-	return jwt.sign(email, config.jwt.secret, { expiresInMinutes: 60 * 5 });
+	return jwt.sign(email, jwt_secret, { expiresInMinutes: 60 * 5 });
 }
 
 function getSignedUrl(fn, ft, next){

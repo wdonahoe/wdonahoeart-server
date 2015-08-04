@@ -4,7 +4,7 @@ var bodyParser 		= require('body-parser');
 var cookieParser 	= require('cookie-parser');
 var session 		= require('express-session');
 var cors 			= require('cors');
-var httpStatus 		= require('http-status-codes');
+var httpStatus 		= require('http-status');
 
 var logger 			= require('./config/logger');
 
@@ -27,7 +27,7 @@ app.use(morgan('combined',{
 
 app.use('/api',require('./routes'));
 app.use('*', function(req, res){
-	res.sendStatus(httpStatus.NOT_FOUND).end();
+	res.sendStatus(httpStatus[404]).end();
 })
 
 app.listen(port, function() {
