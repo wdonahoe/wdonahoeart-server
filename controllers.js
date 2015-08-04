@@ -157,7 +157,7 @@ module.exports = {
 }
 
 function createToken(email){
-	return jwt.sign(email, jwt_secret, { expiresInMinutes: 60 * 5 });
+	return jwt.sign(email, jwt_secret);
 }
 
 function getSignedUrl(fn, ft, next){
