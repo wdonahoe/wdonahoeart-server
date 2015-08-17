@@ -27,7 +27,6 @@ router.route('/test')
 
 router.route('/drawings')
 	.get(controllers.getDrawings)
-	.post(jwtCheck, controllers.postDrawings);
 
 router.route('/drawings/bw')
 	.get(controllers.getDrawingsBW);
@@ -40,11 +39,11 @@ router.route('/drawings/:title')
 	.put(jwtCheck, controllers.putDrawing)
 	.delete(jwtCheck, controllers.deleteDrawing);
 
+router.route('/sign_s3')
+	.get(jwtCheck, controllers.getSignedUrl);
+
 router.route('/login')
 	.post(controllers.login);
-
-router.route('/logout')
-	.delete(controllers.logout)
 
 module.exports = router;
 
