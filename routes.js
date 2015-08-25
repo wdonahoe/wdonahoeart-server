@@ -5,9 +5,12 @@ var config 		= require('./config/config');
 var controllers = require('./controllers');
 var jwt 		= require('express-jwt');
 var _ 			= require('lodash');
+var multer 		= require('multer');
 var router  	= express.Router();
 
 var jwt_secret 	= config.jwt.secret;
+
+var upload 		= multer({dest: 'temp/' });
 
 var jwtCheck = jwt({
 	secret: jwt_secret,
@@ -39,8 +42,8 @@ router.route('/drawings/:title')
 	.put(jwtCheck, controllers.putDrawing)
 	.delete(jwtCheck, controllers.deleteDrawing);
 
-router.route('/sign_s3')
-	.get(jwtCheck, controllers.getSignedUrl);
+router.route('/upload_s3')
+	.post(jwtCheck,upload.single('file'),controllers.uploadS3);
 
 router.route('/login')
 	.post(controllers.login);

@@ -13,8 +13,8 @@ var port 	= Number(process.env.PORT || 8080);
 
 logger.debug("Overriding Express logger");
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json({limit: '5mb'}));
+app.use(bodyParser.urlencoded({ limit: '5mb', extended: true }));
 app.use(cookieParser());
 app.use(cors());
 app.use(morgan('combined',{

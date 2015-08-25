@@ -3,6 +3,8 @@ var config 		= require('./config/config');
 var httpStatus 	= require('http-status');
 var mongoose 	= require('mongoose');
 var aws 		= require('aws-sdk');
+var fs 			= require('fs');
+var s3fs 		= require('s3fs');
 var bcrypt 		= require('bcrypt-nodejs');
 var jwt 		= require('jsonwebtoken');
 var _ 			= require('lodash');
@@ -15,6 +17,11 @@ var admin_emails 	= config.admin.emails;
 var admin_pass		= config.admin.pass_hash;
 
 var jwt_secret 		= config.jwt.secret;
+
+var s3fsImpl = new s3fs( S3_BUCKET, {
+	accessKeyId: AWS_ACCESS_KEY,
+	secretAccessKey: AWS_SECRET_KEY
+});
 
 module.exports = {
 
@@ -133,44 +140,24 @@ module.exports = {
 		var password 	= req.body.password;
 
 		if (!email || !password)
-			res.sendStatus(httpStatus[400]).end();
+			res.sendStatus(httpStatus[400]);
 
 		if (_.includes(admin_emails, email)){
 			if (bcrypt.compareSync(password, admin_pass))
 				res.status(httpStatus[201]).json({ id_token: createToken(email), user: email.split("@")[0] });
 		} else {
-			res.sendStatus(httpStatus[401]).end();
+			res.sendStatus(httpStatus[401]);
 		}
 	},
 
-	getSignedUrl: function(req, res, next){
-		/**
-		* Get a pre-signed url from Amazon S3. 
-		* @param {Object} req
-		* @param {Object} res
-		* @param {function} next
-		*/
-	    aws.config.update({ accessKeyId: AWS_ACCESS_KEY, secretAccessKey: AWS_SECRET_KEY });
-	    var s3 = new aws.S3();
-	    var s3_params = {
-	        Bucket: S3_BUCKET,
-	        Key: req.query.file_name,
-	        ContentType: req.query.file_type,
-	        ACL: 'public-read'
-	    };
-	    s3.getSignedUrl('putObject', s3_params, function(err, data){
-	        if (err) {
-	            return next(err);
-	        }
-	        else {
-	            var return_data = {
-	                signed_request: data,
-	                url: 'https://'+S3_BUCKET+'.s3.amazonaws.com/'+req.query.file_name
-	            };
-	            console.log(return_data);
-	            res.json(return_data);
-	        }
-	    });
+	uploadS3: function(req, res, next){
+		var stream = fs.createReadStream(req.file.path);
+		return s3fsImpl.writeFile(req.file.originalname, stream).then(function(){
+		 	fs.unlink(req.file.path, function(err){
+		 		return next(err);
+		 	});
+		 	res.sendStatus(httpStatus[200]);
+		 });
 	}
 
 };
