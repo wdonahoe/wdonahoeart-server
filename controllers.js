@@ -156,15 +156,14 @@ module.exports = {
 		var data = JSON.parse(req.body.data);
 		async.parallel({
 			S3: function(callback){
-				//var stream = fs.createReadStream(file.path);
-				//return s3fsImpl.writeFile(file.originalname, stream)
-					//.then(function(){
-		 				//fs.unlink(file.path, function(err){
-		 					//return callback(err, "uploaded file to s3");
-		 					return callback(null,"not uploaded!")
-		 				//});
-					//}
-				//);
+				var stream = fs.createReadStream(file.path);
+				return s3fsImpl.writeFile(file.originalname, stream)
+					.then(function(){
+		 				fs.unlink(file.path, function(err){
+		 					return callback(err, "uploaded file to s3");
+		 				});
+					}
+				);
 			},
 			uploadDB: function(callback){
 				
