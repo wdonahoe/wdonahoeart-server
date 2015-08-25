@@ -153,20 +153,21 @@ module.exports = {
 
 	upload: function(req, res, next){
 		var file = req.file;
-
+		var data = JSON.parse(req.body.data);
 		async.parallel({
 			S3: function(callback){
-				var stream = fs.createReadStream(file.path);
-				return s3fsImpl.writeFile(file.originalname, stream)
-					.then(function(){
-		 				fs.unlink(file.path, function(err){
-		 					return callback(err, "uploaded file to s3");
-		 				});
-					}
-				);
+				//var stream = fs.createReadStream(file.path);
+				//return s3fsImpl.writeFile(file.originalname, stream)
+					//.then(function(){
+		 				//fs.unlink(file.path, function(err){
+		 					//return callback(err, "uploaded file to s3");
+		 					return callback(null,"not uploaded!")
+		 				//});
+					//}
+				//);
 			},
 			uploadDB: function(callback){
-				callback(null,"uploaded to dummy db");
+				
 			}
 		}, function(err, result){
 			if (err)
@@ -179,13 +180,4 @@ module.exports = {
 
 function createToken(email){
 	return jwt.sign(email, jwt_secret);
-}
-
-function uploadS3(file){
-	var stream = fs.createReadStream(file.path);
-	return s3fsImpl.writeFile(file.originalname, stream).then(function(){
-		 fs.unlink(file.path, function(err){
-		 	return callback(err, "uploaded file to s3");
-		 });
-	});
 }

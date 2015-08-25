@@ -3,7 +3,7 @@ var _ 		 = require('lodash');
 var Schema 	 = mongoose.Schema;
 
 var DrawingSchema = new Schema({
-	title: 		{ type: String },
+	title: 		{ type: String, unique: true },
 	url: 		{ type: String, required: false },
 	medium: 	{ type: String },
 	width: 		{ type: String },
