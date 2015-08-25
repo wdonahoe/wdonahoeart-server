@@ -7,6 +7,7 @@ var fs 			= require('fs');
 var s3fs 		= require('s3fs');
 var bcrypt 		= require('bcrypt-nodejs');
 var jwt 		= require('jsonwebtoken');
+var async 		= require('async');
 var _ 			= require('lodash');
 
 var AWS_ACCESS_KEY 	= config.aws.aws_access;
@@ -150,18 +151,41 @@ module.exports = {
 		}
 	},
 
-	uploadS3: function(req, res, next){
-		var stream = fs.createReadStream(req.file.path);
-		return s3fsImpl.writeFile(req.file.originalname, stream).then(function(){
-		 	fs.unlink(req.file.path, function(err){
-		 		return next(err);
-		 	});
-		 	res.sendStatus(httpStatus[200]);
-		 });
+	upload: function(req, res, next){
+		var file = req.file;
+
+		async.parallel({
+			S3: function(callback){
+				var stream = fs.createReadStream(file.path);
+				return s3fsImpl.writeFile(file.originalname, stream)
+					.then(function(){
+		 				fs.unlink(file.path, function(err){
+		 					return callback(err, "uploaded file to s3");
+		 				});
+					}
+				);
+			},
+			uploadDB: function(callback){
+				callback(null,"uploaded to dummy db");
+			}
+		}, function(err, result){
+			if (err)
+				return next(err);
+			res.sendStatus(httpStatus[200]);
+		});
 	}
 
 };
 
 function createToken(email){
 	return jwt.sign(email, jwt_secret);
+}
+
+function uploadS3(file){
+	var stream = fs.createReadStream(file.path);
+	return s3fsImpl.writeFile(file.originalname, stream).then(function(){
+		 fs.unlink(file.path, function(err){
+		 	return callback(err, "uploaded file to s3");
+		 });
+	});
 }

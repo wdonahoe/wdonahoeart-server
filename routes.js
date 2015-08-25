@@ -43,7 +43,7 @@ router.route('/drawings/:title')
 	.delete(jwtCheck, controllers.deleteDrawing);
 
 router.route('/upload_s3')
-	.post(jwtCheck,upload.single('file'),controllers.uploadS3);
+	.post(jwtCheck, upload.single('file'), controllers.upload);
 
 router.route('/login')
 	.post(controllers.login);
