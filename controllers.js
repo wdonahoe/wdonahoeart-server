@@ -1,17 +1,19 @@
-var Drawing 	= require('./models/drawing');
-var config 		= require('./config/config');
-var httpStatus 	= require('http-status');
-var mongoose 	= require('mongoose');
-var aws 		= require('aws-sdk');
-var fs 			= require('fs');
-var s3fs 		= require('s3fs');
-var bcrypt 		= require('bcrypt-nodejs');
-var jwt 		= require('jsonwebtoken');
-var async 		= require('async');
-var _ 			= require('lodash');
+var Drawing 		= require('./models/drawing');
+var DrawingOrder 	= require('./models/drawingOrder');
+var config 			= require('./config/config');
+var httpStatus 		= require('http-status');
+var mongoose 		= require('mongoose');
+var aws 			= require('aws-sdk');
+var fs 				= require('fs');
+var s3fs 			= require('s3fs');
+var bcrypt 			= require('bcrypt-nodejs');
+var jwt 			= require('jsonwebtoken');
+var async 			= require('async');
+var _ 				= require('lodash');
 
 var AWS_ACCESS_KEY 	= config.aws.aws_access;
 var AWS_SECRET_KEY 	= config.aws.aws_secret;
+var AWS_URL 		= config.aws.aws_url;
 var S3_BUCKET 		= config.aws.aws_bucket;
 
 var admin_emails 	= config.admin.emails;
@@ -154,19 +156,52 @@ module.exports = {
 	upload: function(req, res, next){
 		var file = req.file;
 		var data = JSON.parse(req.body.data);
+		var newName = data.title.split(/\s+/g).join('-');
+		var imgType = _.last(file.originalname.split('.'));
+		var newFile = newName + "." + imgType;
+
 		async.parallel({
-			S3: function(callback){
-				var stream = fs.createReadStream(file.path);
-				return s3fsImpl.writeFile(file.originalname, stream)
-					.then(function(){
-		 				fs.unlink(file.path, function(err){
-		 					return callback(err, "uploaded file to s3");
-		 				});
-					}
-				);
+			s3Upload: function(callback){
+				fs.readFile(file.path, function(err, data){
+					if (err)
+						return callback(err);
+
+					aws.config.update({accessKeyId: AWS_ACCESS_KEY, secretAccessKey: AWS_SECRET_KEY});
+	    			var s3 = new aws.S3();
+	    			var s3Params = {
+	    				Bucket: S3_BUCKET,
+	    				ACL: 'public-read',
+	    				Key: newFile,
+	    				Body: data,
+	    				ContentType: 'image/jpeg'
+	    			};
+	    			s3.putObject(s3Params, function(err, data){
+	    				return callback(err, data);
+	    			});
+	    		});
+
 			},
-			uploadDB: function(callback){
-				
+			dbSave: function(callback){
+				var newDrawing 		= new Drawing();
+
+				newDrawing.title 	= data.title;
+				newDrawing.medium 	= data.medium.toLowerCase();
+				newDrawing.width 	= data.width;
+				newDrawing.height 	= data.height;
+				newDrawing.isBw 	= data.isBw;
+				newDrawing.url 		= AWS_URL + newFile
+
+				newDrawing.save(function(err, drawing){
+
+					DrawingOrder.findAndModify({
+						update: {$push: {"ordering": drawing._id}},
+						upsert: true
+					}).exec(function(err){
+						log.info("New drawing " + "'" + drawing.title + "' saved to aws and database!");
+						return callback(err,drawing);
+					});
+				});
+
 			}
 		}, function(err, result){
 			if (err)

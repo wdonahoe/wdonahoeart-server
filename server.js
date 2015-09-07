@@ -1,5 +1,6 @@
 var express 		= require('express');
 var morgan 			= require('morgan');
+var mongoose 		= require('mongoose');
 var bodyParser 		= require('body-parser');
 var cookieParser 	= require('cookie-parser');
 var session 		= require('express-session');
@@ -7,6 +8,7 @@ var cors 			= require('cors');
 var httpStatus 		= require('http-status');
 
 var logger 			= require('./config/logger');
+var config 			= require('./config/config');
 
 var app 	= express();
 var port 	= Number(process.env.PORT || 8080);
@@ -24,6 +26,15 @@ app.use(morgan('combined',{
 		}
 	}
 }));
+
+mongoose.connect(config.mongo.url);
+var db = mongoose.connection;
+db.once('open', function(open){
+	logger.info("connected to " + db.name + ' at ' + db.host + ' on port ' + db.port);
+});
+db.on('error', function(err){
+	logger.error(err);
+});
 
 app.use('/api',require('./routes'));
 app.use('*', function(req, res){
