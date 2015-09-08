@@ -114,7 +114,7 @@ module.exports = {
 
 	putDrawing: function(req, res, next){
 		/**
-		* Edit a drawing document.
+		* Update a drawing document.
 		* @param {Object} req
 		* @param {Object} res
 		* @param {function} next
@@ -134,7 +134,7 @@ module.exports = {
 
 	login: function(req, res){
 		/**
-		* Create a session.
+		* Create a JSON web token for user on successful authentication.
 		* @param {Object} req
 		* @param {Object} res
 		* @param {function} next
@@ -154,63 +154,88 @@ module.exports = {
 	},
 
 	upload: function(req, res, next){
-		var file = req.file;
-		var data = JSON.parse(req.body.data);
-		var newName = data.title.split(/\s+/g).join('-');
-		var imgType = _.last(file.originalname.split('.'));
-		var newFile = newName + "." + imgType;
+		/**
+		* Upload a drawing image to AWS bucket
+		* Save drawing to database. 
+		* @param {Object} req
+		* @param {Object} res
+		* @param {function} next
+		*/
+		var file 		= req.file;
+		var data 		= JSON.parse(req.body.data);
+		var imgType 	= _.last(req.file.originalname.split('.'));
+		var newFile 	= data.title.split(/\s+/g).join('-') + "." + imgType;
 
-		async.parallel({
-			s3Upload: function(callback){
-				fs.readFile(file.path, function(err, data){
-					if (err)
-						return callback(err);
-
-					aws.config.update({accessKeyId: AWS_ACCESS_KEY, secretAccessKey: AWS_SECRET_KEY});
-	    			var s3 = new aws.S3();
-	    			var s3Params = {
-	    				Bucket: S3_BUCKET,
-	    				ACL: 'public-read',
-	    				Key: newFile,
-	    				Body: data,
-	    				ContentType: 'image/jpeg'
-	    			};
-	    			s3.putObject(s3Params, function(err, data){
-	    				return callback(err, data);
-	    			});
-	    		});
-
-			},
-			dbSave: function(callback){
-				var newDrawing 		= new Drawing();
-
-				newDrawing.title 	= data.title;
-				newDrawing.medium 	= data.medium.toLowerCase();
-				newDrawing.width 	= data.width;
-				newDrawing.height 	= data.height;
-				newDrawing.isBw 	= data.isBw;
-				newDrawing.url 		= AWS_URL + newFile
-
-				newDrawing.save(function(err, drawing){
-
-					DrawingOrder.findAndModify({
-						update: {$push: {"ordering": drawing._id}},
-						upsert: true
-					}).exec(function(err){
-						log.info("New drawing " + "'" + drawing.title + "' saved to aws and database!");
-						return callback(err,drawing);
-					});
-				});
-
+		async.parallel([
+				function(callback){
+					awsUpload(callback, _.merge(data, {file: file}, {newFile: newFile}));
+				},
+				function(callback){
+					dbSave(callback, _.merge(data, {newFile: newFile}));
+				}
+		 	],
+		 	function(err, result){
+			    if (err)
+					return next(err);
+				res.sendStatus(httpStatus[200]);
 			}
-		}, function(err, result){
-			if (err)
-				return next(err);
-			res.sendStatus(httpStatus[200]);
-		});
-	}
+		);
 
+	}
 };
+
+
+function awsUpload(callback, fileData){
+	/**
+	* Upload a drawing image to AWS bucket
+	* Save drawing to database. 
+	* @param {Object} req
+	* @param {Object} res
+	* @param {function} next
+	*/
+	fs.readFile(fileData.file.path, function(err, data){
+		if (err)
+			callback(err);
+
+		aws.config.update({accessKeyId: AWS_ACCESS_KEY, secretAccessKey: AWS_SECRET_KEY});
+	    var s3 = new aws.S3();
+	    var s3Params = {
+	    	Bucket: S3_BUCKET,
+	    	ACL: 'public-read',
+	    	Key: fileData.newFile,
+	    	Body: data,
+	    	ContentType: 'image/jpeg'
+	    };
+	    s3.putObject(s3Params, function(err, result){
+	    	fs.unlink(fileData.file.path, function(err){
+	    		callback(err, result);
+	    	});
+	    });
+	});
+
+}
+
+
+function dbSave(callback, data){
+	/**
+	* Save drawing to database. 
+	* @param {Object} req
+	* @param {Object} res
+	* @param {function} next
+	*/
+	data.newFile = AWS_URL + data.newFile;
+	Drawing.findOne({ title: data.title }, function(err, drawing){
+		if (drawing){
+			drawing.update(callback, data);
+		}
+		else {
+			var newDrawing = new Drawing();
+			newDrawing.update(callback, data);
+		}
+	});
+
+}
+
 
 function createToken(email){
 	return jwt.sign(email, jwt_secret);

@@ -31,6 +31,17 @@ DrawingSchema.pre('save', function(next){
 	next();
 });
 
+DrawingSchema.methods.update = function(callback, data){
+	this.title 	= data.title;
+	this.medium = data.medium.toLowerCase();
+	this.width 	= data.width;
+	this.height = data.height;
+	this.isBw 	= data.isBw;
+	this.url 	= data.newFile;
+
+	return this.save(callback);
+}
+
 _.each(_.keys(DrawingSchema.paths), function(attr){
 	if (DrawingSchema.path(attr).isRequired === undefined){
 		DrawingSchema.path(attr).required(true);
