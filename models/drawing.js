@@ -20,8 +20,8 @@ DrawingSchema.virtual('dimensions')
 	});
 
 DrawingSchema.pre('save', function(next){
-	this.width = _.padRight(this.width,'\"');
-	this.height = _.padRight(this.height,'\"');
+	this.width = _.padRight(this.width,'x');
+	this.height = _.padRight(this.height,'x');
 
 	var now = new Date();
 	this.updated_at = now;
@@ -37,9 +37,11 @@ DrawingSchema.methods.update = function(callback, data){
 	this.width 	= data.width;
 	this.height = data.height;
 	this.isBw 	= data.isBw;
-	this.url 	= data.newFile;
+	this.url 	= data.url;
 
-	return this.save(callback);
+	this.save(function(err, drawing){
+		callback(err, drawing);
+	});
 }
 
 _.each(_.keys(DrawingSchema.paths), function(attr){

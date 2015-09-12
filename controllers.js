@@ -172,7 +172,7 @@ module.exports = {
 				},
 				function(callback){
 					dbSave(callback, _.merge(data, {newFile: newFile}));
-				}
+				},
 		 	],
 		 	function(err, result){
 			    if (err)
@@ -196,7 +196,6 @@ function awsUpload(callback, fileData){
 	fs.readFile(fileData.file.path, function(err, data){
 		if (err)
 			callback(err);
-
 		aws.config.update({accessKeyId: AWS_ACCESS_KEY, secretAccessKey: AWS_SECRET_KEY});
 	    var s3 = new aws.S3();
 	    var s3Params = {
@@ -216,24 +215,49 @@ function awsUpload(callback, fileData){
 }
 
 
-function dbSave(callback, data){
+function dbSave(callback, fileData){
 	/**
 	* Save drawing to database. 
 	* @param {Object} req
 	* @param {Object} res
 	* @param {function} next
 	*/
-	data.newFile = AWS_URL + data.newFile;
-	Drawing.findOne({ title: data.title }, function(err, drawing){
+	async.waterfall([
+		function(done){
+			saveDrawing(done, fileData);
+		},
+		function(drawing, done){
+			updateOrder(done, drawing);
+		}
+	], function(err, result){
+		callback(err, result);
+	});
+
+}
+
+function saveDrawing(callback, fileData){
+	Drawing.findOne({ title: fileData.title }, function(err, drawing){
 		if (drawing){
-			drawing.update(callback, data);
+			drawing.update(callback, _.merge(fileData, {url: AWS_URL + fileData.newFile}));
 		}
 		else {
 			var newDrawing = new Drawing();
-			newDrawing.update(callback, data);
+			newDrawing.update(callback, _.merge(fileData, {url: AWS_URL + fileData.newFile}));
 		}
 	});
+}
 
+function updateOrder(callback, drawing){
+	DrawingOrder.findOne({}, function(err, drawingOrder){
+		if (drawingOrder){
+			drawingOrder.ordering.push(drawing._id);
+		}
+		else {
+			var drawingOrder = new DrawingOrder();
+			drawingOrder.ordering = [drawing._id];
+		}
+		drawingOrder.save(callback);
+	});
 }
 
 
