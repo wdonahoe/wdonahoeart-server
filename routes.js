@@ -32,7 +32,7 @@ router.route('/drawings')
 	.get(controllers.getDrawings)
 
 router.route('/drawings/bw')
-	.get(controllers.getDrawingsBW);
+	.get(controllers.getDrawingsBw);
 
 router.route('/drawings/color')
 	.get(controllers.getDrawingsColor);

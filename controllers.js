@@ -69,14 +69,14 @@ module.exports = {
 		});
 	},
 
-	getDrawingsBW: function(req, res, next){
+	getDrawingsBw: function(req, res, next){
 		/**
 		* Retreive all b/w-drawing documents.
 		* @param {Object} req
 		* @param {Object} res
 		* @param {function} next
 		*/
-		Drawing.find({ is_bw: true }).exec(function(err, drawings){
+		Drawing.find({ isBw: true }).exec(function(err, drawings){
 			if (err)
 				return next(err);
 			res.status(httpStatus[200]).json(drawings);
@@ -90,7 +90,7 @@ module.exports = {
 		* @param {Object} res
 		* @param {function} next
 		*/
-		Drawing.find({ is_bw: false }).exec(function(err, drawings){
+		Drawing.find({ isBw: false }).exec(function(err, drawings){
 			if (err)
 				return next(err);
 			res.status(httpStatus[200]).json(drawings);
@@ -250,7 +250,7 @@ function saveDrawing(callback, fileData){
 function updateOrder(callback, drawing){
 	DrawingOrder.findOne({}, function(err, drawingOrder){
 		if (drawingOrder){
-			drawingOrder.ordering.push(drawing._id);
+			drawingOrder.ordering.unshift(drawing._id);
 		}
 		else {
 			var drawingOrder = new DrawingOrder();
