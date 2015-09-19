@@ -76,7 +76,22 @@ module.exports = {
 		* @param {Object} res
 		* @param {function} next
 		*/
-		Drawing.find({ isBw: true }).exec(function(err, drawings){
+		async.waterfall([
+			function(done){
+				DrawingOrder.findOne({}, function(err, drawingOrder){
+					done(err, drawingOrder.ordering);
+				});
+			},
+			function(ordering, done){
+				async.map(ordering, function(drawingID, done){
+					Drawing.findOne({_id: drawingID}, function(err, drawing){
+						done(err, drawing);
+					});
+				}, function(err, drawings){
+					done(err, drawings);
+				});
+			}
+		], function(err, drawings){
 			if (err)
 				return next(err);
 			res.status(httpStatus[200]).json(drawings);

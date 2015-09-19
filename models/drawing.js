@@ -50,4 +50,11 @@ _.each(_.keys(DrawingSchema.paths), function(attr){
 	}
 });
 
+DrawingSchema.statics.getDrawingById = function(drawingID, callback){
+	this.findById({id: drawingID}, function(err, drawing){
+		console.log(drawing);
+		callback(err, drawing);
+	});
+}
+
 module.exports = mongoose.model('Drawing',DrawingSchema);

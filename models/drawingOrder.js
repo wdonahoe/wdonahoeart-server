@@ -1,5 +1,6 @@
 var mongoose 		= require('mongoose');
 var _ 		 		= require('lodash');
+var async 			= require('async');
 var Schema 	 		= mongoose.Schema;
 
 var DrawingOrderSchema = new Schema({
@@ -12,6 +13,15 @@ DrawingOrderSchema.methods.update = function(callback, drawingID){
 
 	this.save(function(err, drawingOrder){
 		callback(err, drawingOrder);
+	});
+}
+
+DrawingOrderSchema.statics.getOrdering = function(callback){
+	this.findOne({}, function(err, drawingOrder){
+		if (err)
+			callback(err);
+		console.log(drawingOrder.ordering);
+		callback(drawingOrder.ordering);
 	});
 }
 
