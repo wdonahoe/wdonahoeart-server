@@ -30,7 +30,7 @@ app.use(morgan('combined',{
 mongoose.connect(config.mongo.url);
 var db = mongoose.connection;
 db.once('open', function(open){
-	logger.info("connected to " + db.name + ' at ' + db.host + ' on port ' + db.port);
+	logger.info("✔ connected to " + db.name + ' at ' + db.host + ' on port ' + db.port);
 });
 db.on('error', function(err){
 	logger.error(err);
@@ -42,5 +42,5 @@ app.use('*', function(req, res){
 })
 
 app.listen(port, function() {
-	logger.info("Listening on port " + port);
+	logger.info("✔ Listening on port " + port);
 });

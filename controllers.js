@@ -9,6 +9,7 @@ var s3fs 			= require('s3fs');
 var bcrypt 			= require('bcrypt-nodejs');
 var jwt 			= require('jsonwebtoken');
 var async 			= require('async');
+var path 			= require('path');
 var _ 				= require('lodash');
 
 var AWS_ACCESS_KEY 	= config.aws.aws_access;
@@ -94,7 +95,7 @@ module.exports = {
 		], function(err, drawings){
 			if (err)
 				return next(err);
-			res.status(httpStatus[200]).json(drawings);
+			res.status(httpStatus[200]).json(_.filter(drawings, 'isBw'));
 		});
 	},
 
@@ -105,10 +106,25 @@ module.exports = {
 		* @param {Object} res
 		* @param {function} next
 		*/
-		Drawing.find({ isBw: false }).exec(function(err, drawings){
+		async.waterfall([
+			function(done){
+				DrawingOrder.findOne({}, function(err, drawingOrder){
+					done(err, drawingOrder.ordering);
+				});
+			},
+			function(ordering, done){
+				async.map(ordering, function(drawingID, done){
+					Drawing.findOne({_id: drawingID}, function(err, drawing){
+						done(err, drawing);
+					});
+				}, function(err, drawings){
+					done(err, drawings);
+				});
+			}
+		], function(err, drawings){
 			if (err)
 				return next(err);
-			res.status(httpStatus[200]).json(drawings);
+			res.status(httpStatus[200]).json(_.filter(drawings, 'isBw', false));
 		});
 	},
 
@@ -181,26 +197,27 @@ module.exports = {
 		var imgType 	= _.last(req.file.originalname.split('.'));
 		var newFile 	= data.title.split(/\s+/g).join('-') + "." + imgType;
 
-		async.parallel([
-				function(callback){
-					awsUpload(callback, _.merge(data, {file: file}, {newFile: newFile}));
+		async.parallel({
+				aws: function(callback){
+					awsUpload(_.merge(data, {file: file}, {newFile: newFile}), callback);
 				},
-				function(callback){
-					dbSave(callback, _.merge(data, {newFile: newFile}));
+				db: function(callback){
+					dbSave(_.merge(data, {newFile: newFile}), callback);
 				},
-		 	],
+		 	},
 		 	function(err, result){
 			    if (err)
 					return next(err);
-				res.sendStatus(httpStatus[200]);
+				res.status(httpStatus[200]).send(result.db);
 			}
 		);
 
-	}
+	},
+
 };
 
 
-function awsUpload(callback, fileData){
+function awsUpload(fileData, callback){
 	/**
 	* Upload a drawing image to AWS bucket
 	* Save drawing to database. 
@@ -211,6 +228,7 @@ function awsUpload(callback, fileData){
 	fs.readFile(fileData.file.path, function(err, data){
 		if (err)
 			callback(err);
+
 		aws.config.update({accessKeyId: AWS_ACCESS_KEY, secretAccessKey: AWS_SECRET_KEY});
 	    var s3 = new aws.S3();
 	    var s3Params = {
@@ -229,8 +247,7 @@ function awsUpload(callback, fileData){
 
 }
 
-
-function dbSave(callback, fileData){
+function dbSave(fileData, callback){
 	/**
 	* Save drawing to database. 
 	* @param {Object} req
@@ -239,10 +256,10 @@ function dbSave(callback, fileData){
 	*/
 	async.waterfall([
 		function(done){
-			saveDrawing(done, fileData);
+			saveDrawing(fileData, done);
 		},
 		function(drawing, done){
-			updateOrder(done, drawing);
+			updateOrder(drawing, done);
 		}
 	], function(err, result){
 		callback(err, result);
@@ -250,7 +267,7 @@ function dbSave(callback, fileData){
 
 }
 
-function saveDrawing(callback, fileData){
+function saveDrawing(fileData, callback){
 	Drawing.findOne({ title: fileData.title }, function(err, drawing){
 		if (drawing){
 			drawing.update(callback, _.merge(fileData, {url: AWS_URL + fileData.newFile}));
@@ -262,7 +279,7 @@ function saveDrawing(callback, fileData){
 	});
 }
 
-function updateOrder(callback, drawing){
+function updateOrder(drawing, callback){
 	DrawingOrder.findOne({}, function(err, drawingOrder){
 		if (drawingOrder){
 			drawingOrder.ordering.unshift(drawing._id);
@@ -271,7 +288,10 @@ function updateOrder(callback, drawing){
 			var drawingOrder = new DrawingOrder();
 			drawingOrder.ordering = [drawing._id];
 		}
-		drawingOrder.save(callback);
+		drawingOrder.save(function(err, drawingOrder){
+			console.log(drawing);
+			callback(err, drawing);
+		});
 	});
 }
 

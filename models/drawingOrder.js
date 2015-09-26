@@ -7,12 +7,12 @@ var DrawingOrderSchema = new Schema({
 	ordering: [Schema.ObjectId]
 });
 
-DrawingOrderSchema.methods.update = function(callback, drawingID){
-	this.ordering.push(drawingID);
+DrawingOrderSchema.methods.update = function(callback, drawing){
+	this.ordering.push(drawing._id);
 	console.log(this.ordering);
 
 	this.save(function(err, drawingOrder){
-		callback(err, drawingOrder);
+		callback(err, drawingOrder, drawing);
 	});
 }
 
