@@ -85,7 +85,8 @@ module.exports = {
 			},
 			function(ordering, done){
 				async.map(ordering, function(drawingID, done){
-					Drawing.findOne({_id: drawingID}, function(err, drawing){
+					Drawing.findOne({_id: drawingID}).lean().exec(function(err, drawing){
+						drawing.dimensions = drawing.height + "\"" + " x " + drawing.width + "\"";
 						done(err, drawing);
 					});
 				}, function(err, drawings){
@@ -114,7 +115,8 @@ module.exports = {
 			},
 			function(ordering, done){
 				async.map(ordering, function(drawingID, done){
-					Drawing.findOne({_id: drawingID}, function(err, drawing){
+					Drawing.findOne({_id: drawingID}).lean().exec(function(err, drawing){
+						drawing.dimensions = drawing.height + "\"" + " x " + drawing.width + "\"";
 						done(err, drawing);
 					});
 				}, function(err, drawings){

@@ -34,8 +34,8 @@ DrawingSchema.pre('save', function(next){
 DrawingSchema.methods.update = function(callback, data){
 	this.title 	= data.title;
 	this.medium = data.medium.toLowerCase();
-	this.width 	= data.width;
-	this.height = data.height;
+	this.width 	= Number(data.width);
+	this.height = Number(data.height);
 	this.isBw 	= data.isBw;
 	this.url 	= data.url;
 
@@ -53,6 +53,7 @@ _.each(_.keys(DrawingSchema.paths), function(attr){
 DrawingSchema.statics.getDrawingById = function(drawingID, callback){
 	this.findById({id: drawingID}, function(err, drawing){
 		console.log(drawing);
+		drawing.dimensions = drawing.width + "\"" + " x " + "\"" + drawing.height;
 		callback(err, drawing);
 	});
 }
