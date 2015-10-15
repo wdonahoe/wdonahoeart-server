@@ -6,6 +6,7 @@
   "dependencies": {
     "async": "^1.4.2",
     "aws-sdk": "^2.1.40",
+    "babel": "^5.8.23",
     "bcrypt-nodejs": "0.0.3",
     "body-parser": "^1.13.2",
     "child-process-promise": "^1.1.0",

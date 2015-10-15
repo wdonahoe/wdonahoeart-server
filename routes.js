@@ -28,19 +28,10 @@ router.route('/test/protect')
 router.route('/test')
 	.get(controllers.dummyUnprotected);
 
-router.route('/drawings')
+router.route('/drawings/:gallery')
 	.get(controllers.getDrawings)
-
-router.route('/drawings/bw')
-	.get(controllers.getDrawingsBw);
-
-router.route('/drawings/color')
-	.get(controllers.getDrawingsColor);
-
-router.route('/drawings/:title')
-	.get(controllers.getDrawing)
-	.put(jwtCheck, controllers.putDrawing)
-	.delete(jwtCheck, controllers.deleteDrawing);
+	.put(jwtCheck, controllers.putDrawings)
+	.delete(jwtCheck, controllers.deleteDrawings)
 
 router.route('/upload_s3')
 	.post(jwtCheck, upload.single('file'), controllers.upload);

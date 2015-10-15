@@ -1,3 +1,5 @@
+'use strict';
+
 var Drawing 		= require('./models/drawing');
 var DrawingOrder 	= require('./models/drawingOrder');
 var config 			= require('./config/config');
@@ -28,196 +30,154 @@ var s3fsImpl = new s3fs( S3_BUCKET, {
 });
 
 module.exports = {
-
-	dummyUnprotected: function(req, res, next){
-		res.json({message: "You've accessed an unprotected resource!"});
-	},
-
-	dummyProtected: function(req, res, next){
-		res.json({message: "You've accessed a protected resource!"});
-	},
-
-	getDrawings: function(req, res, next) {
-		/**
-		* Retreive all drawing documents.
-		* @param {Object} req
-		* @param {Object} res
-		* @param {function} next
-		*/
-		Drawing.find().exec(function(err, drawings){
-			if (err)
-				return next(err);
-			res.status(httpStatus[200]).json(drawings);
-		});
-	},
-
-	postDrawings:  function(req, res, next){
-		/**
-		* Create a new drawing instance.
-		* @param {Object} req
-		* @param {Object} res
-		* @param {function} next
-		*/
-		async.waterfall([
-			function(done){
-				// get signed url for drawing from s3
-				getSignedUrl(req.query.file_name, req.query.file_type, done);
-			}
-		], function(err,data){
-			if (err)
-				return next(err);
-			res.status(httpStatus.CREATED).json(data)
-		});
-	},
-
-	getDrawingsBw: function(req, res, next){
-		/**
-		* Retreive all b/w-drawing documents.
-		* @param {Object} req
-		* @param {Object} res
-		* @param {function} next
-		*/
-		async.waterfall([
-			function(done){
-				DrawingOrder.findOne({}, function(err, drawingOrder){
-					done(err, drawingOrder.ordering);
-				});
-			},
-			function(ordering, done){
-				async.map(ordering, function(drawingID, done){
-					Drawing.findOne({_id: drawingID}).lean().exec(function(err, drawing){
-						drawing.dimensions = drawing.height + "\"" + " x " + drawing.width + "\"";
-						done(err, drawing);
-					});
-				}, function(err, drawings){
-					done(err, drawings);
-				});
-			}
-		], function(err, drawings){
-			if (err)
-				return next(err);
-			res.status(httpStatus[200]).json(_.filter(drawings, 'isBw'));
-		});
-	},
-
-	getDrawingsColor: function(req, res, next){
-		/**
-		* Retreive all color-drawing documents.
-		* @param {Object} req
-		* @param {Object} res
-		* @param {function} next
-		*/
-		async.waterfall([
-			function(done){
-				DrawingOrder.findOne({}, function(err, drawingOrder){
-					done(err, drawingOrder.ordering);
-				});
-			},
-			function(ordering, done){
-				async.map(ordering, function(drawingID, done){
-					Drawing.findOne({_id: drawingID}).lean().exec(function(err, drawing){
-						drawing.dimensions = drawing.height + "\"" + " x " + drawing.width + "\"";
-						done(err, drawing);
-					});
-				}, function(err, drawings){
-					done(err, drawings);
-				});
-			}
-		], function(err, drawings){
-			if (err)
-				return next(err);
-			res.status(httpStatus[200]).json(_.filter(drawings, 'isBw', false));
-		});
-	},
-
-	getDrawing: function(req, res, next){
-		/**
-		* Retreive a drawing document.
-		* @param {Object} req
-		* @param {Object} res
-		* @param {function} next
-		*/
-		var fullTitle = req.params.title.split('-').join(' ');
-		Drawing.findOne({ title: fullTitle }).exec(function(err, drawing){
-			if (err)
-				return next(err);
-			res.status(httpStatus[200]).json(drawing);
-		});
-	},
-
-	putDrawing: function(req, res, next){
-		/**
-		* Update a drawing document.
-		* @param {Object} req
-		* @param {Object} res
-		* @param {function} next
-		*/
-		res.status(httpStatus[200]).json({});
-	},
-
-	deleteDrawing: function(req, res, next){
-		/**
-		* Delete a drawing document.
-		* @param {Object} req
-		* @param {Object} res
-		* @param {function} next
-		*/
-		res.status(httpStatus[200]).json({});
-	},
-
-	login: function(req, res){
-		/**
-		* Create a JSON web token for user on successful authentication.
-		* @param {Object} req
-		* @param {Object} res
-		* @param {function} next
-		*/
-		var email 		= req.body.email;
-		var password 	= req.body.password;
-
-		if (!email || !password)
-			res.sendStatus(httpStatus[400]);
-
-		if (_.includes(admin_emails, email)){
-			if (bcrypt.compareSync(password, admin_pass))
-				res.status(httpStatus[201]).json({ id_token: createToken(email), user: email.split("@")[0] });
-		} else {
-			res.sendStatus(httpStatus[401]);
-		}
-	},
-
-	upload: function(req, res, next){
-		/**
-		* Upload a drawing image to AWS bucket
-		* Save drawing to database. 
-		* @param {Object} req
-		* @param {Object} res
-		* @param {function} next
-		*/
-		var file 		= req.file;
-		var data 		= JSON.parse(req.body.data);
-		var imgType 	= _.last(req.file.originalname.split('.'));
-		var newFile 	= data.title.split(/\s+/g).join('-') + "." + imgType;
-
-		async.parallel({
-				aws: function(callback){
-					awsUpload(_.merge(data, {file: file}, {newFile: newFile}), callback);
-				},
-				db: function(callback){
-					dbSave(_.merge(data, {newFile: newFile}), callback);
-				},
-		 	},
-		 	function(err, result){
-			    if (err)
-					return next(err);
-				res.status(httpStatus[200]).send(result.db);
-			}
-		);
-
-	},
-
+	"dummyUnprotected": dummyUnprotected,
+	"dummyProtected": 	dummyProtected,
+	"getDrawings": 		getDrawings,
+	"getDrawingSet": 	getDrawingSet,
+	"putDrawings": 		putDrawings,
+	"deleteDrawings": 	deleteDrawings,
+	"login": 			login,
+	"upload": 			upload
 };
 
+
+function dummyUnprotected(req, res, next){
+	res.json({message: "You've accessed an unprotected resource!"});
+}
+
+function dummyProtected(req, res, next){
+	res.json({message: "You've accessed a protected resource!"});
+}
+
+function getDrawings(req, res, next){
+	var gallery = req.params.gallery;
+	if (_.some(['color','bw'],function(val){ return val === gallery; })){
+		getDrawingSet(gallery, function(err, drawings){
+			if (err)
+				return next(err);
+			var ret = {};
+			ret[gallery] = drawings;
+			res.status(httpStatus[200]).json(ret);
+		});
+	} else if (gallery === 'all'){
+		async.parallel({
+			// bw: (done) => getDrawingSet('bw', done),
+			// color: (done) => getDrawingSet('color', done)
+			bw: function(done){
+				getDrawingSet('bw', done);
+			},
+			color: function(done){
+				getDrawingSet('color', done);
+			}
+		}, function(err, results){
+			if (err)
+				return next(err);
+			res.status(httpStatus[200]).json(results);
+		});
+	} else {
+		return next(err);
+	}
+}
+
+function getDrawingSet(gallery, next){
+	/**
+	* Retreive all b/w-drawing documents.
+	* @param {Object} req
+	* @param {Object} res
+	* @param {function} next
+	*/
+	async.waterfall([
+		function(done){
+			DrawingOrder.findOne({}, function(err, drawingOrder){
+				var ordering = gallery === 'bw' ? drawingOrder.ordering.bw : drawingOrder.ordering.color;
+				done(err, ordering);
+			});
+		},
+		function(ordering, done){
+			async.map(ordering, function(drawingID, done){
+				Drawing.findOne({_id: drawingID}).lean().exec(function(err, drawing){
+					drawing.dimensions = drawing.height + "\"" + " x " + drawing.width + "\"";
+					done(err, drawing);
+				});
+			}, function(err, drawings){
+				done(err, drawings);
+			});
+		}
+	], function(err, drawings){
+		return next(err, drawings);
+	});
+}
+
+function putDrawings(req, res, next){
+	/**
+	* Update a drawing document.
+	* @param {Object} req
+	* @param {Object} res
+	* @param {function} next
+	*/
+	res.status(httpStatus[200]).json({});
+}
+
+function deleteDrawings(req, res, next){
+	/**
+	* Delete a drawing document.
+	* @param {Object} req
+	* @param {Object} res
+	* @param {function} next
+	*/
+	res.status(httpStatus[200]).json({});
+}
+
+function login(req, res){
+	/**
+	* Create a JSON web token for user on successful authentication.
+	* @param {Object} req
+	* @param {Object} res
+	* @param {function} next
+	*/
+	var email 		= req.body.email;
+	var password 	= req.body.password;
+
+	if (!email || !password)
+		res.sendStatus(httpStatus[400]);
+
+	if (_.includes(admin_emails, email)){
+		if (bcrypt.compareSync(password, admin_pass))
+			res.status(httpStatus[201]).json({ id_token: createToken(email), user: email.split("@")[0] });
+	} else {
+		res.sendStatus(httpStatus[401]);
+	}
+}
+
+function upload(req, res, next){
+	/**
+	* Upload a drawing image to AWS bucket
+	* Save drawing to database. 
+	* @param {Object} req
+	* @param {Object} res
+	* @param {function} next
+	*/
+	var file 		= req.file;
+	var data 		= JSON.parse(req.body.data);
+	var imgType 	= _.last(req.file.originalname.split('.'));
+	var newFile 	= data.title.split(/\s+/g).join('-') + "." + imgType;
+
+	async.parallel({
+			aws: function(callback){
+				awsUpload(_.merge(data, {file: file}, {newFile: newFile}), callback);
+			},
+			db: function(callback){
+				dbSave(_.merge(data, {newFile: newFile}), callback);
+			},
+	 	},
+	 	function(err, result){
+		    if (err)
+				return next(err);
+			res.status(httpStatus[200]).send(result.db);
+		}
+	);
+
+}
 
 function awsUpload(fileData, callback){
 	/**
@@ -284,11 +244,21 @@ function saveDrawing(fileData, callback){
 function updateOrder(drawing, callback){
 	DrawingOrder.findOne({}, function(err, drawingOrder){
 		if (drawingOrder){
-			drawingOrder.ordering.unshift(drawing._id);
+			if (drawing.isBw)
+				drawingOrder.ordering.bw.unshift(drawing._id);
+			else
+				drawingOrder.ordering.color.unshift(drawing._id);
 		}
 		else {
 			var drawingOrder = new DrawingOrder();
-			drawingOrder.ordering = [drawing._id];
+			if (drawing.isBw){
+				drawingOrder.ordering.bw = [drawing._id];
+				drawingOrder.ordering.color = [];
+			}
+			else {
+				drawingOrder.ordering.color = [drawing._id];
+				drawingOrder.ordering.bw = [];
+			}
 		}
 		drawingOrder.save(function(err, drawingOrder){
 			console.log(drawing);

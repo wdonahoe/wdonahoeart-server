@@ -4,7 +4,10 @@ var async 			= require('async');
 var Schema 	 		= mongoose.Schema;
 
 var DrawingOrderSchema = new Schema({
-	ordering: [Schema.ObjectId]
+	ordering: {
+		bw: [Schema.ObjectId],
+		color: [Schema.ObjectId]
+	}
 });
 
 DrawingOrderSchema.methods.update = function(callback, drawing){
