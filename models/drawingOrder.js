@@ -1,9 +1,11 @@
-var mongoose 		= require('mongoose');
-var _ 		 		= require('lodash');
-var async 			= require('async');
-var Schema 	 		= mongoose.Schema;
+'use strict';
 
-var DrawingOrderSchema = new Schema({
+let mongoose 		= require('mongoose');
+let _ 		 		= require('lodash');
+let async 			= require('async');
+let Schema 	 		= mongoose.Schema;
+
+let DrawingOrderSchema = new Schema({
 	ordering: {
 		bw: [Schema.ObjectId],
 		color: [Schema.ObjectId]
@@ -12,18 +14,13 @@ var DrawingOrderSchema = new Schema({
 
 DrawingOrderSchema.methods.update = function(callback, drawing){
 	this.ordering.push(drawing._id);
-	console.log(this.ordering);
-
-	this.save(function(err, drawingOrder){
-		callback(err, drawingOrder, drawing);
-	});
+	this.save((err, drawingOrder) => callback(err, drawingOrder, drawing));
 }
 
 DrawingOrderSchema.statics.getOrdering = function(callback){
-	this.findOne({}, function(err, drawingOrder){
+	this.findOne({}, (err, drawingOrder) => {
 		if (err)
 			callback(err);
-		console.log(drawingOrder.ordering);
 		callback(drawingOrder.ordering);
 	});
 }

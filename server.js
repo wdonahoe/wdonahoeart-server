@@ -19,28 +19,14 @@ app.use(bodyParser.json({limit: '5mb'}));
 app.use(bodyParser.urlencoded({ limit: '5mb', extended: true }));
 app.use(cookieParser());
 app.use(cors());
-app.use(morgan('combined',{
-	stream: {
-		write: function(message, encoding){
-			logger.info(message);
-		}
-	}
-}));
+app.use(morgan('combined', { stream: {write: (message, encoding) => logger.info(message)}}));
 
 mongoose.connect(config.mongo.url);
 var db = mongoose.connection;
-db.once('open', function(open){
-	logger.info("✔ connected to " + db.name + ' at ' + db.host + ' on port ' + db.port);
-});
-db.on('error', function(err){
-	logger.error(err);
-});
+db.once('open', open => logger.info("✔ connected to " + db.name + ' at ' + db.host + ' on port ' + db.port));
+db.on('error', err => logger.error(err));
 
 app.use('/api',require('./routes'));
-app.use('*', function(req, res){
-	res.sendStatus(httpStatus[404]).end();
-})
+app.use('*', (req, res) => res.sendStatus(httpStatus[404]).end());
 
-app.listen(port, function() {
-	logger.info("✔ Listening on port " + port);
-});
+app.listen(port, () => logger.info("✔ Listening on port " + port));
