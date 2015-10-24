@@ -38,7 +38,8 @@ module.exports = {
 	"putDrawings": 		putDrawings,
 	"deleteDrawings": 	deleteDrawings,
 	"login": 			login,
-	"upload": 			upload
+	"upload": 			upload,
+	"reorderDrawings":  reorderDrawings
 };
 
 
@@ -96,6 +97,21 @@ function getDrawingSet(gallery, next){
 	], (err, drawings) => next(err, drawings));
 }
 
+function reorderDrawings(req, res, next){
+	/** 
+	* Update DrawingOrder
+	*/
+	DrawingOrder.findOne({}, (err, drawingOrder) => {
+		drawingOrder.ordering.bw = _.map(req.body.bw, drawing => drawing._id);
+		drawingOrder.ordering.color = _.map(req.body.color, drawing => drawing._id);
+		drawingOrder.save((err, drawingOrder) => {
+			if (err)
+				return next(err);
+			res.sendStatus(httpStatus[200]);
+		});
+	});
+}
+
 function putDrawings(req, res){
 	/**
 	* Update a drawing document.
@@ -106,15 +122,42 @@ function putDrawings(req, res){
 	res.status(httpStatus[200]).json({});
 }
 
-function deleteDrawings(req, res){
-	/**
-	* Delete a drawing document.
-	* @param {Object} req
-	* @param {Object} res
-	* @param {function} next
-	*/
-	res.status(httpStatus[200]).json({});
-}
+ function deleteDrawings(req, res, next){
+// 	/**
+// 	* Delete a drawing document.
+// 	* @param {Object} req
+// 	* @param {Object} res
+// 	* @param {function} next
+// 	*/
+
+// 	let ids = getValuesByKey(req.body.drawings, '_id');
+// 	async.parallel([
+// 		done => Drawing.find({_id: {$in: ids}}).remove(done),
+// 		done => { 
+// 			DrawingOrder.findOne({}).exec(drawingOrder => {
+// 				for (let i of req.body.drawings){
+// 					let gallery = req.body.drawings[i].gallery;
+// 					drawingOrder[gallery] = _.without(drawingOrder[gallery], req.body.drawings[i]._id);
+// 				}
+// 				drawingOrder.save(done);
+// 			});
+// 		},
+// 		done => {
+// 			aws.config.update({accessKeyId: AWS_ACCESS_KEY, secretAccessKey: AWS_SECRET_KEY});
+// 			let s3 = new aws.S3();
+// 			s3.deleteObjects({
+// 				Bucket: S3_BUCKET,
+// 				Delete: {
+// 					Objects: _.map(req.body.drawings, drawing => ({"Key": drawing.file }))
+// 				}
+// 			}, err => done(err));
+// 		}
+// 	], (err, deleted) => {
+// 		if (err)
+// 			next(err)
+// 		res.status(httpStatus[200]).json(results);
+// 	});
+ }
 
 function login(req, res){
 	/**
@@ -213,6 +256,10 @@ function saveDrawing(fileData, next){
 			newDrawing.update(next, _.merge(fileData, {url: AWS_URL + fileData.newFile}));
 		}
 	});
+}
+
+function getValuesByKey(obj, key){
+	return _.forIn(obj, value => value[key]);
 }
 
 function updateOrder(drawing, next){

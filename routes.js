@@ -35,6 +35,9 @@ router.route('/drawings/:gallery')
 	.put(jwtCheck, controllers.putDrawings)
 	.delete(jwtCheck, controllers.deleteDrawings)
 
+router.route('/drawings/reorder')
+	.post(jwtCheck, controllers.reorderDrawings);
+
 router.route('/upload_s3')
 	.post(jwtCheck, upload.single('file'), controllers.upload);
 
