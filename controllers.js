@@ -39,7 +39,8 @@ module.exports = {
 	"deleteDrawings": 	deleteDrawings,
 	"login": 			login,
 	"upload": 			upload,
-	"reorderDrawings":  reorderDrawings
+	"reorderDrawings":  reorderDrawings,
+	"getDrawing": 		getDrawing
 };
 
 
@@ -112,14 +113,47 @@ function reorderDrawings(req, res, next){
 	});
 }
 
-function putDrawings(req, res){
+function getDrawing(req, res, next){
+
+	Drawing.findOne({_id: mongoose.Types.ObjectId(req.params.id)}).lean().exec((err, drawing) => {
+		if (err)
+			return next(err);
+		drawing.dimensions = template('${height}\" x ${width}\"', {height: drawing.height, width: drawing.width});
+		res.status(httpStatus[200]).json(drawing);
+	});
+}
+
+function putDrawings(req, res, next){
 	/**
 	* Update a drawing document.
 	* @param {Object} req
 	* @param {Object} res
 	* @param {function} next
 	*/
-	res.status(httpStatus[200]).json({});
+	let imgType;
+	let newFile;
+	let fileData;
+	if (req.file !== undefined){
+		imgType = _.last(req.file.originalname.split('.'));
+		newFile = req.drawing.title.split(/\s+/g).join('-') + "." + imgType;
+		fileData = _.assign({newFile: newFile},{file: req.file});
+	}
+
+	async.parallel({
+		drawing: (done) => { Drawing.findOne({_id: mongoose.Types.ObjectId(req.params.id)}, (err, drawing) => {
+					_.forIn(JSON.parse(req.body.drawing), (value, key) => {
+						drawing[key] = value;
+					});
+					drawing.updatedAt = Date.now();
+					drawing.save(done);
+				}); 
+		},
+		aws: (done) => awsUpload(fileData, done)
+	}, (err, result) => {
+		if (err)
+			return next(err);
+		res.status(httpStatus[200]).json(result.drawing);
+	});
 }
 
  function deleteDrawings(req, res, next){
@@ -214,6 +248,9 @@ function awsUpload(fileData, next){
 	* @param {Object} res
 	* @param {function} next
 	*/
+	if (fileData === undefined)
+		return next(null);
+
 	fs.readFile(fileData.file.path, (err, data) => {
 		if (err)
 			next(err);
