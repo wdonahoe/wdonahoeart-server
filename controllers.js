@@ -29,7 +29,6 @@ let s3fsImpl = new s3fs( S3_BUCKET, {
 	accessKeyId: AWS_ACCESS_KEY,
 	secretAccessKey: AWS_SECRET_KEY
 });
-
 module.exports = {
 	"dummyUnprotected": dummyUnprotected,
 	"dummyProtected": 	dummyProtected,
