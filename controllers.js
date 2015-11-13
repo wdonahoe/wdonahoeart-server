@@ -152,7 +152,7 @@ function putDrawings(req, res, next){
 	}, (err, result) => {
 		if (err)
 			return next(err);
-		res.status(httpStatus[200]).json(result.drawing);
+		res.status(httpStatus[200]).json(result.drawing[0]);
 	});
 }
 
