@@ -59,6 +59,7 @@ function getDrawings(req, res, next){
 				return next(err);
 			let ret = {};
 			ret[gallery] = drawings;
+			console.log(ret);
 			res.status(httpStatus[200]).json(ret);
 		});
 	} else if (gallery === 'all'){
@@ -68,6 +69,7 @@ function getDrawings(req, res, next){
 		}, (err, results) => {
 			if (err)
 				return next(err);
+			console.log(results);
 			res.status(httpStatus[200]).json(results);
 		});
 	} else {

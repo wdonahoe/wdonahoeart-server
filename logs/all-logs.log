@@ -5729,3 +5729,10 @@
 {"level":"info","message":"::1 - - [13/Dec/2015:15:52:01 +0000] \"GET /api/drawings/all HTTP/1.1\" OK 4589 \"http://localhost:3000/\" \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:42.0) Gecko/20100101 Firefox/42.0\"\n","timestamp":"2015-12-13T15:52:01.181Z"}
 {"level":"info","message":"::1 - - [13/Dec/2015:15:52:50 +0000] \"GET /api/drawings/all HTTP/1.1\" OK 4589 \"http://localhost:3000/\" \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:42.0) Gecko/20100101 Firefox/42.0\"\n","timestamp":"2015-12-13T15:52:50.148Z"}
 {"level":"info","message":"::1 - - [13/Dec/2015:15:54:30 +0000] \"GET /api/drawings/all HTTP/1.1\" OK 4589 \"http://localhost:3000/\" \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:42.0) Gecko/20100101 Firefox/42.0\"\n","timestamp":"2015-12-13T15:54:30.991Z"}
+{"level":"info","message":"✔ Listening on port 8080","timestamp":"2015-12-13T16:38:34.376Z"}
+{"level":"info","message":"✔ connected to wdonahoeart-dev-2 at ds051943.mongolab.com on port 51943","timestamp":"2015-12-13T16:38:34.920Z"}
+{"level":"info","message":"✔ Listening on port 8080","timestamp":"2015-12-13T16:48:48.227Z"}
+{"level":"info","message":"✔ connected to wdonahoeart-dev-2 at ds051943.mongolab.com on port 51943","timestamp":"2015-12-13T16:48:48.746Z"}
+{"level":"info","message":"✔ Listening on port 8080","timestamp":"2015-12-13T16:48:54.189Z"}
+{"level":"info","message":"✔ connected to wdonahoeart-dev-2 at ds051943.mongolab.com on port 51943","timestamp":"2015-12-13T16:48:54.695Z"}
+{"level":"info","message":"::1 - - [13/Dec/2015:16:49:24 +0000] \"GET /api/drawings/all HTTP/1.1\" OK 4589 \"http://localhost:3000/\" \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:42.0) Gecko/20100101 Firefox/42.0\"\n","timestamp":"2015-12-13T16:49:24.605Z"}
