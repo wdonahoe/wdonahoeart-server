@@ -8,7 +8,6 @@ let httpStatus 		= require('http-status');
 let mongoose 		= require('mongoose');
 let aws 			= require('aws-sdk');
 let fs 				= require('fs');
-let s3fs 			= require('s3fs');
 let bcrypt 			= require('bcrypt-nodejs');
 let jwt 			= require('jsonwebtoken');
 let async 			= require('async');
@@ -25,31 +24,15 @@ let admin_pass		= config.admin.pass_hash;
 
 let jwt_secret 		= config.jwt.secret;
 
-let s3fsImpl = new s3fs( S3_BUCKET, {
-	accessKeyId: AWS_ACCESS_KEY,
-	secretAccessKey: AWS_SECRET_KEY
-});
 module.exports = {
-	"dummyUnprotected": dummyUnprotected,
-	"dummyProtected": 	dummyProtected,
 	"getDrawings": 		getDrawings,
 	"getDrawingSet": 	getDrawingSet,
 	"putDrawings": 		putDrawings,
-	"deleteDrawings": 	deleteDrawings,
 	"login": 			login,
 	"upload": 			upload,
 	"reorderDrawings":  reorderDrawings,
 	"getDrawing": 		getDrawing
 };
-
-
-function dummyUnprotected(req, res, next){
-	res.json({message: "You've accessed an unprotected resource!"});
-}
-
-function dummyProtected(req, res, next){
-	res.json({message: "You've accessed a protected resource!"});
-}
 
 function getDrawings(req, res, next){
 	let gallery = req.params.gallery;
@@ -59,7 +42,6 @@ function getDrawings(req, res, next){
 				return next(err);
 			let ret = {};
 			ret[gallery] = drawings;
-			console.log(ret);
 			res.status(httpStatus[200]).json(ret);
 		});
 	} else if (gallery === 'all'){
@@ -156,43 +138,6 @@ function putDrawings(req, res, next){
 		res.status(httpStatus[200]).json(result.drawing[0]);
 	});
 }
-
- function deleteDrawings(req, res, next){
-// 	/**
-// 	* Delete a drawing document.
-// 	* @param {Object} req
-// 	* @param {Object} res
-// 	* @param {function} next
-// 	*/
-
-// 	let ids = getValuesByKey(req.body.drawings, '_id');
-// 	async.parallel([
-// 		done => Drawing.find({_id: {$in: ids}}).remove(done),
-// 		done => { 
-// 			DrawingOrder.findOne({}).exec(drawingOrder => {
-// 				for (let i of req.body.drawings){
-// 					let gallery = req.body.drawings[i].gallery;
-// 					drawingOrder[gallery] = _.without(drawingOrder[gallery], req.body.drawings[i]._id);
-// 				}
-// 				drawingOrder.save(done);
-// 			});
-// 		},
-// 		done => {
-// 			aws.config.update({accessKeyId: AWS_ACCESS_KEY, secretAccessKey: AWS_SECRET_KEY});
-// 			let s3 = new aws.S3();
-// 			s3.deleteObjects({
-// 				Bucket: S3_BUCKET,
-// 				Delete: {
-// 					Objects: _.map(req.body.drawings, drawing => ({"Key": drawing.file }))
-// 				}
-// 			}, err => done(err));
-// 		}
-// 	], (err, deleted) => {
-// 		if (err)
-// 			next(err)
-// 		res.status(httpStatus[200]).json(results);
-// 	});
- }
 
 function login(req, res){
 	/**

@@ -24,16 +24,9 @@ let jwtCheck = jwt({
 	}
 });
 
-router.route('/test/protect')
-	.get(jwtCheck,controllers.dummyProtected);
-
-router.route('/test')
-	.get(controllers.dummyUnprotected);
-
 router.route('/drawings/:gallery')
 	.get(controllers.getDrawings)
 	.put(jwtCheck, controllers.putDrawings)
-	.delete(jwtCheck, controllers.deleteDrawings)
 
 router.route('/drawing/:id')
 	.get(controllers.getDrawing)
