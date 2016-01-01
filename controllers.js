@@ -35,6 +35,13 @@ module.exports = {
 };
 
 function getDrawings(req, res, next){
+	/**
+	* Retreive all drawings, or the set of drawings with type
+	* matching req.gallery (color || bw)
+	* @param {Object} req
+	* @param {Object} res
+	* @param {function} next
+	*/
 	let gallery = req.params.gallery;
 	if (_.some(['color','bw'], val => val === gallery )){
 		getDrawingSet(gallery, (err, drawings) => {
@@ -62,8 +69,7 @@ function getDrawings(req, res, next){
 function getDrawingSet(gallery, next){
 	/**
 	* Retreive all b/w-drawing documents.
-	* @param {Object} req
-	* @param {Object} res
+	* @param {String} gallery 
 	* @param {function} next
 	*/
 	async.waterfall([
@@ -84,6 +90,9 @@ function getDrawingSet(gallery, next){
 function reorderDrawings(req, res, next){
 	/** 
 	* Update DrawingOrder
+	* @param {Object} req
+	* @param {Object} res
+	* @param {function} next
 	*/
 	DrawingOrder.findOne({}, (err, drawingOrder) => {
 		drawingOrder.ordering.bw = _.map(req.body.bw, drawing => drawing._id);
@@ -97,7 +106,12 @@ function reorderDrawings(req, res, next){
 }
 
 function getDrawing(req, res, next){
-
+	/**
+	* Update a drawing document.
+	* @param {Object} req
+	* @param {Object} res
+	* @param {function} next
+	*/
 	Drawing.findOne({_id: mongoose.Types.ObjectId(req.params.id)}).lean().exec((err, drawing) => {
 		if (err)
 			return next(err);
@@ -113,18 +127,19 @@ function putDrawings(req, res, next){
 	* @param {Object} res
 	* @param {function} next
 	*/
+	let drawing = JSON.parse(req.body.drawing);
 	let imgType;
 	let newFile;
 	let fileData;
 	if (req.file !== undefined){
 		imgType = _.last(req.file.originalname.split('.'));
-		newFile = req.drawing.title.split(/\s+/g).join('-') + "." + imgType;
+		newFile = drawing.title.split(/\s+/g).join('-') + "." + imgType;
 		fileData = _.assign({newFile: newFile},{file: req.file});
 	}
 
 	async.parallel({
 		drawing: (done) => { Drawing.findOne({_id: mongoose.Types.ObjectId(req.params.id)}, (err, drawing) => {
-					_.forIn(JSON.parse(req.body.drawing), (value, key) => {
+					_.forIn(drawing, (value, key) => {
 						drawing[key] = value;
 					});
 					drawing.updatedAt = Date.now();
@@ -144,7 +159,6 @@ function login(req, res){
 	* Create a JSON web token for user on successful authentication.
 	* @param {Object} req
 	* @param {Object} res
-	* @param {function} next
 	*/
 	let email 		= req.body.email;
 	let password 	= req.body.password;
@@ -190,8 +204,7 @@ function awsUpload(fileData, next){
 	/**
 	* Upload a drawing image to AWS bucket
 	* Save drawing to database. 
-	* @param {Object} req
-	* @param {Object} res
+	* @param {Object} fileData
 	* @param {function} next
 	*/
 	if (fileData === undefined)
@@ -217,9 +230,8 @@ function awsUpload(fileData, next){
 
 function dbSave(fileData, next){
 	/**
-	* Save drawing to database. 
-	* @param {Object} req
-	* @param {Object} res
+	* Save drawing to database and update the order of all drawings. 
+	* @param {Object} fileData
 	* @param {function} next
 	*/
 	async.waterfall([
@@ -230,6 +242,11 @@ function dbSave(fileData, next){
 }
 
 function saveDrawing(fileData, next){
+	/**
+	* Save a new drawing to the database or update a current drawing.
+	* @param {Object} fileData
+	* @param {function} next
+	*/
 	Drawing.findOne({ title: fileData.title }, (err, drawing) => {
 		if (drawing){
 			drawing.update(next, _.merge(fileData, {url: AWS_URL + fileData.newFile}));
@@ -246,6 +263,11 @@ function getValuesByKey(obj, key){
 }
 
 function updateOrder(drawing, next){
+	/**
+	* Update drawing order.
+	* @param {Object} drawing
+	* @param {function} next
+	*/
 	DrawingOrder.findOne({}, (err, drawingOrder) => {
 		if (drawingOrder){
 			if (drawing.isBw)
